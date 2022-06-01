@@ -60,7 +60,7 @@ public class SnowFlakeIdGenerator implements IdGenerator {
             // Wait until current time is greater than or equal to this.lastTime
             // System Clock may be changed. e.g. NTP update the system clock backward.
             while (time < lastTime) {
-                log.warn("");
+                log.warn("Time ran backward! currentTime={}, lastSeenTime={}", time, lastTime);
                 Thread.yield();
                 time = System.currentTimeMillis();
             }
