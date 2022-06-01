@@ -3,27 +3,30 @@ package org.coderclan.edelweiss;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * Thread Safe
+ * <p>
+ * https://en.wikipedia.org/wiki/Snowflake_ID
+ * <p>
+ * Snowflakes are 64 bits. (Only 63 are used to fit in a signed integer.) The first 41 bits are a timestamp,
+ * representing milliseconds since the chosen epoch. The next 10 bits represent a machine ID, preventing clashes.
+ * Twelve more bits represent a per-machine sequence number, to allow creation of multiple snowflakes in the same millisecond.
  *
  * @author aray(dot)chou(dot)cn(at)gmail(dot)com
  */
 public class SnowFlakeIdGenerator implements IdGenerator {
     private static final Logger log = LoggerFactory.getLogger(SnowFlakeIdGenerator.class);
-    /**
-     * https://en.wikipedia.org/wiki/Snowflake_ID
-     * <p>
-     * Snowflakes are 64 bits. (Only 63 are used to fit in a signed integer.) The first 41 bits are a timestamp,
-     * representing milliseconds since the chosen epoch. The next 10 bits represent a machine ID, preventing clashes.
-     * Twelve more bits represent a per-machine sequence number, to allow creation of multiple snowflakes in the same millisecond.[1]
-     */
     private final static int timestampShiftBits = 10 + 12; // 10 bits for machineId, 12 bits for per-machine sequence number;
     private final static int machineIdShiftBits = 12; // 12 bits for per-machine sequence number;
-    //private final static long maxTimestamp = 2L ^ 41 - 1;
+    private final static long maxTimestamp = 2L ^ 41 - 1;
     private final static int maxMachineId = 2 ^ 10 - 1;
     private final static int maxSequenceValue = 2 ^ 12 - 1;
     private final static long epoch = 1654094343806L;
     private final int machineId;
+    /**
+     * Equals to (this.machineId << machineIdShiftBits)
+     */
     private final int machineData;
     /**
      * guard by this.
@@ -68,6 +71,8 @@ public class SnowFlakeIdGenerator implements IdGenerator {
                 this.lastTime = time;
             }
 
+            // if (time - epoch > maxTimestamp) == true, the returning ID will be negative number.
+            // returning negative IDs is better than throwing an exception.
             return ((time - epoch) << timestampShiftBits) | machineData | (sequence++);
         }
     }
