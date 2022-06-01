@@ -6,6 +6,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>edelweiss</module>
+        <module>spring-boot-starter-edelweiss</module>
     </modules>
     <groupId>org.coderclan</groupId>
     <artifactId>edelweiss-parent</artifactId>
