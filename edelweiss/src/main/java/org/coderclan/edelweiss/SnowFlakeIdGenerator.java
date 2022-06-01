@@ -50,13 +50,6 @@ public class SnowFlakeIdGenerator implements IdGenerator {
     public long generateId() {
         long time = System.currentTimeMillis();
         synchronized (this) {
-            // sequence exceeds max value
-            if (sequence > maxSequenceValue) {
-                // increase this.lastTime to make current thread wait.
-                lastTime += 1L;
-                sequence = 0;
-            }
-
             // Wait until current time is greater than or equal to this.lastTime
             // System Clock may be changed. e.g. NTP update the system clock backward.
             while (time < lastTime) {
@@ -73,7 +66,16 @@ public class SnowFlakeIdGenerator implements IdGenerator {
 
             // if (time - epoch > maxTimestamp) == true, the returning ID will be negative number.
             // returning negative IDs is better than throwing an exception.
-            return ((time - epoch) << timestampShiftBits) | machineData | (sequence++);
+            long id = ((time - epoch) << timestampShiftBits) | machineData | (sequence++);
+
+            // sequence exceeds max value
+            if (sequence > maxSequenceValue) {
+                // increase this.lastTime to make the next ID can only be generated at (or after) the next millisecond.
+                lastTime += 1L;
+                sequence = 0;
+            }
+
+            return id;
         }
     }
 }
