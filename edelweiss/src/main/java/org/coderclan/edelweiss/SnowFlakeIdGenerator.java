@@ -23,22 +23,45 @@ public class SnowFlakeIdGenerator implements IdGenerator {
     private final static int maxMachineId = 2 ^ 10 - 1;
     private final static int maxSequenceValue = 2 ^ 12 - 1;
     private final static long epoch = 1654094343806L;
-    private final int machineId;
-    /**
-     * Equals to (this.machineId << machineIdShiftBits)
-     */
-    private final int machineData;
     /**
      * guard by this.
      */
-    private long lastTime;
+    private int machineId = -1;
+    /**
+     * guard by this.
+     * Equals to (this.machineId << machineIdShiftBits)
+     */
+    private int machineData;
+    /**
+     * guard by this.
+     */
+    private long lastUsedTime;
     /**
      * guard by this.
      * per-machine sequence value.
      */
     private int sequence = 0;
 
-    public SnowFlakeIdGenerator(int machineId) {
+    private SnowFlakeIdGenerator() {
+    }
+
+    private static final SnowFlakeIdGenerator INSTANCE = new SnowFlakeIdGenerator();
+
+    /**
+     * @return a singleton instance of SnowFlakeIdGenerator.
+     */
+    public static SnowFlakeIdGenerator instance() {
+        return INSTANCE;
+    }
+
+    ;
+
+    /**
+     * Set machine ID. Set it to -1 will make {@link #generateId()} throws IllegalStateException.
+     *
+     * @param machineId machine ID should be unique at any time.
+     */
+    public synchronized void setMachineId(int machineId) {
         if (machineId > maxMachineId) {
             throw new IllegalArgumentException("machineId must be within the range[0," + maxMachineId + "].");
         }
@@ -47,31 +70,38 @@ public class SnowFlakeIdGenerator implements IdGenerator {
     }
 
     @Override
-    public long generateId() {
-        long time = System.currentTimeMillis();
+    public long generateId() throws IllegalStateException {
+        // this call is expensive, don't put it into the following synchronized block
+        long currentTime = System.currentTimeMillis();
+
         synchronized (this) {
-            // Wait until current time is greater than or equal to this.lastTime
-            // System Clock may be changed. e.g. NTP update the system clock backward.
-            while (time < lastTime) {
-                log.warn("Time ran backward! currentTime={}, lastSeenTime={}", time, lastTime);
-                Thread.yield();
-                time = System.currentTimeMillis();
+
+            if (machineId < 0) {
+                throw new IllegalStateException("The SnowFlakeIdGenerator has been disabled temporarily.");
             }
 
-            if (time > lastTime) {
+            // Wait until current currentTime is greater than or equal to this.lastTime
+            // System Clock may be changed. e.g. NTP update the system clock backward.
+            while (currentTime < lastUsedTime) {
+                log.warn("Time ran backward! currentTime={}, lastUsedTime={}", currentTime, lastUsedTime);
+                Thread.yield();
+                currentTime = System.currentTimeMillis();
+            }
+
+            if (currentTime > lastUsedTime) {
                 // reset sequence;
                 sequence = 0;
-                this.lastTime = time;
+                this.lastUsedTime = currentTime;
             }
 
-            // if (time - epoch > maxTimestamp) == true, the returning ID will be negative number.
+            // if (currentTime - epoch > maxTimestamp) == true, the returning ID will be a negative number.
             // returning negative IDs is better than throwing an exception.
-            long id = ((time - epoch) << timestampShiftBits) | machineData | (sequence++);
+            long id = ((currentTime - epoch) << timestampShiftBits) | machineData | (sequence++);
 
             // sequence exceeds max value
             if (sequence > maxSequenceValue) {
                 // increase this.lastTime to make the next ID can only be generated at (or after) the next millisecond.
-                lastTime += 1L;
+                lastUsedTime += 1L;
                 sequence = 0;
             }
 
