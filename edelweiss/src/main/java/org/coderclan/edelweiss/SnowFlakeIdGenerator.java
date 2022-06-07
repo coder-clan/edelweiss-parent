@@ -17,12 +17,6 @@ import org.slf4j.LoggerFactory;
  */
 public class SnowFlakeIdGenerator implements IdGenerator {
     private static final Logger log = LoggerFactory.getLogger(SnowFlakeIdGenerator.class);
-    private final static int timestampShiftBits = 10 + 12; // 10 bits for machineId, 12 bits for per-machine sequence number;
-    private final static int machineIdShiftBits = 12; // 12 bits for per-machine sequence number;
-    private final static long maxTimestamp = 2L ^ 41 - 1;
-    private final static int maxMachineId = 2 ^ 10 - 1;
-    private final static int maxSequenceValue = 2 ^ 12 - 1;
-    private final static long epoch = 1654094343806L;
     /**
      * guard by this.
      */
@@ -62,11 +56,11 @@ public class SnowFlakeIdGenerator implements IdGenerator {
      * @param machineId machine ID should be unique at any time.
      */
     public synchronized void setMachineId(int machineId) {
-        if (machineId > maxMachineId) {
-            throw new IllegalArgumentException("machineId must be within the range[0," + maxMachineId + "].");
+        if (machineId > Constants.maxMachineId) {
+            throw new IllegalArgumentException("machineId must be within the range[0," + Constants.maxMachineId + "].");
         }
         this.machineId = machineId;
-        this.machineData = machineId << machineIdShiftBits;
+        this.machineData = machineId << Constants.machineIdShiftBits;
     }
 
     @Override
@@ -96,10 +90,10 @@ public class SnowFlakeIdGenerator implements IdGenerator {
 
             // if (currentTime - epoch > maxTimestamp) == true, the returning ID will be a negative number.
             // returning negative IDs is better than throwing an exception.
-            long id = ((currentTime - epoch) << timestampShiftBits) | machineData | (sequence++);
+            long id = ((currentTime - Constants.EPOCH) << Constants.timestampShiftBits) | machineData | (sequence++);
 
             // sequence exceeds max value
-            if (sequence > maxSequenceValue) {
+            if (sequence > Constants.maxSequenceValue) {
                 // increase this.lastTime to make the next ID can only be generated at (or after) the next millisecond.
                 lastUsedTime += 1L;
                 sequence = 0;

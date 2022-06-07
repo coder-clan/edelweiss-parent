@@ -1,0 +1,15 @@
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2
+  transaction:
+    default-timeout: 60
+  datasource:
+    url: jdbc:h2:mem:example
+    username: sa
+    password: sa
+    driverClassName: org.h2.Driver
+    hikari:
+      minimumIdle: 2
+      maximumPoolSize: 10
