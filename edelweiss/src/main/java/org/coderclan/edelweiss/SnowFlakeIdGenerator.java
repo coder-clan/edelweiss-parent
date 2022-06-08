@@ -20,12 +20,17 @@ public class SnowFlakeIdGenerator implements IdGenerator {
     /**
      * guard by this.
      */
-    private int machineId = -1;
+    private int machineId;
     /**
      * guard by this.
      * Equals to (this.machineId << machineIdShiftBits)
      */
     private int machineData;
+
+    /**
+     * guard by this. Timestamp, unit: second, won't generate Id after this point of time.
+     */
+    private long machineIdExpiringTime;
     /**
      * guard by this.
      */
@@ -55,12 +60,13 @@ public class SnowFlakeIdGenerator implements IdGenerator {
      *
      * @param machineId machine ID should be unique at any time.
      */
-    public synchronized void setMachineId(int machineId) {
+    public synchronized void setMachineId(int machineId, long machineIdExpiringTime) {
         if (machineId > Constants.maxMachineId) {
             throw new IllegalArgumentException("machineId must be within the range[0," + Constants.maxMachineId + "].");
         }
         this.machineId = machineId;
         this.machineData = machineId << Constants.machineIdShiftBits;
+        this.machineIdExpiringTime = machineIdExpiringTime;
     }
 
     @Override
@@ -70,8 +76,8 @@ public class SnowFlakeIdGenerator implements IdGenerator {
 
         synchronized (this) {
 
-            if (machineId < 0) {
-                throw new IllegalStateException("The SnowFlakeIdGenerator has been disabled temporarily.");
+            if (currentTime > this.machineIdExpiringTime * 1000) {
+                throw new IllegalStateException("The SnowFlakeIdGenerator hasn't gotten a valid machine id.");
             }
 
             // Wait until current currentTime is greater than or equal to this.lastTime
