@@ -16,7 +16,7 @@ public class Demo implements ApplicationListener<ApplicationStartedEvent> {
     public void onApplicationEvent(ApplicationStartedEvent event) {
         while (true) {
             try {
-                Thread.sleep(10*1000L);
+                Thread.sleep(3*1000L);
                 System.out.println(this.idGenerator.generateId());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
