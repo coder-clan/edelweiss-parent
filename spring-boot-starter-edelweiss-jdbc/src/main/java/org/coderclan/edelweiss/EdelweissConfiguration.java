@@ -26,8 +26,8 @@ public class EdelweissConfiguration {
     @Bean
     @ConditionalOnMissingBean(InstanceIdAssigner.class)
     @ConditionalOnBean(DataSource.class)
-    public JbdcInstanceIdAssigner instanceIdAssigner() {
-        return new JbdcInstanceIdAssigner();
+    public JbdcInstanceIdAssigner instanceIdAssigner(DataSource dataSource) {
+        return new JbdcInstanceIdAssigner(dataSource);
     }
 
     @Bean

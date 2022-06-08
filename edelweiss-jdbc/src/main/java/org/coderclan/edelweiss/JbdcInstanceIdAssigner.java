@@ -1,7 +1,5 @@
 package org.coderclan.edelweiss;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.sql.*;
@@ -13,8 +11,12 @@ import java.time.Instant;
  * @author aray(dot)chou(dot)cn(at)gmail(dot)com
  */
 public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
-    @Autowired
-    private DataSource dataSource;
+
+    private final DataSource dataSource;
+
+    public JbdcInstanceIdAssigner(DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     @PostConstruct
     public void init() {

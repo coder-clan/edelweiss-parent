@@ -5,9 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
     <modules>
-        <module>edelweiss</module>
-        <module>spring-boot-starter-edelweiss</module>
+        <module>edelweiss-core</module>
+        <module>spring-boot-starter-edelweiss-jdbc</module>
         <module>edelweiss-demo</module>
+        <module>edelweiss-jdbc</module>
     </modules>
     <groupId>org.coderclan</groupId>
     <artifactId>edelweiss-parent</artifactId>
@@ -21,12 +22,17 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <artifactId>edelweiss</artifactId>
+                <artifactId>edelweiss-core</artifactId>
                 <groupId>org.coderclan</groupId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <artifactId>spring-boot-starter-edelweiss</artifactId>
+                <artifactId>edelweiss-jdbc</artifactId>
+                <groupId>org.coderclan</groupId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <artifactId>spring-boot-starter-edelweiss-jdbc</artifactId>
                 <groupId>org.coderclan</groupId>
                 <version>${project.version}</version>
             </dependency>
