@@ -1,5 +1,6 @@
 package org.coderclan.edelweiss;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -12,6 +13,9 @@ import javax.sql.DataSource;
 @Configuration
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 public class EdelweissConfiguration {
+    @Value("${coderclan.edelweiss.machineIdTtl:600}")
+    private int machineIdTtl;
+
     @Bean
     @ConditionalOnMissingBean(IdGenerator.class)
     public SnowFlakeIdGenerator idGenerator() {
@@ -29,7 +33,7 @@ public class EdelweissConfiguration {
     @Bean
     @ConditionalOnBean({SnowFlakeIdGenerator.class, InstanceIdAssigner.class})
     public SnowFlakeInstanceIdRenewer snowFlakeInstanceIdRenewer(SnowFlakeIdGenerator idGenerator, InstanceIdAssigner instanceIdAssigner) {
-        return new SnowFlakeInstanceIdRenewer(idGenerator, instanceIdAssigner);
+        return new SnowFlakeInstanceIdRenewer(idGenerator, instanceIdAssigner, machineIdTtl);
     }
 //    @Bean
 //    @ConditionalOnMissingBean

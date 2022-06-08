@@ -1,3 +1,8 @@
+coderclan:
+  edelweiss:
+    # TTL of machineId of SnowFlake. Unit: Second. Default value: 600
+    machineIdTtl: 10
+
 spring:
   h2:
     console:

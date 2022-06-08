@@ -1,11 +1,10 @@
 package org.coderclan.edelweiss;
 
-import org.springframework.scheduling.annotation.Scheduled;
-
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author aray(dot)chou(dot)cn(at)gmail(dot)com
@@ -17,29 +16,28 @@ public class SnowFlakeInstanceIdRenewer {
     private final InstanceIdAssigner instanceIdAssigner;
     private final String key = UUID.randomUUID().toString();
     private volatile int machineId = -1;
-    private final static int ttl = 10;
+    private final int machineIdTtl;
     private final ScheduledExecutorService executorService = Executors
             .newSingleThreadScheduledExecutor();
 
 
-    public SnowFlakeInstanceIdRenewer(SnowFlakeIdGenerator idGenerator, InstanceIdAssigner instanceIdAssigner) {
+    public SnowFlakeInstanceIdRenewer(SnowFlakeIdGenerator idGenerator, InstanceIdAssigner instanceIdAssigner, int machineIdTtl) {
         this.idGenerator = idGenerator;
         this.instanceIdAssigner = instanceIdAssigner;
+        this.machineIdTtl = machineIdTtl;
 
-        long expiringTime = getExpiringTime();
-        int machineId = instanceIdAssigner.assignAnInstanceId(key, expiringTime);
-        if (machineId >= 0) {
-            this.idGenerator.setMachineId(machineId, expiringTime);
-            this.machineId = machineId;
-        }
+        this.renew();
+
+        executorService.scheduleAtFixedRate(this::renew, machineIdTtl / 2, machineIdTtl / 2, TimeUnit.SECONDS);
     }
+
 
     private long getExpiringTime() {
-        return Instant.now().getEpochSecond() + ttl;
+        return Instant.now().getEpochSecond() + machineIdTtl;
     }
 
-    @Scheduled(fixedRate = ttl / 2 * 1000)
-    void renew() {
+
+    private void renew() {
         long expiringTime = getExpiringTime();
         int machineId = instanceIdAssigner.renewInstanceId(this.machineId, key, expiringTime);
         if (machineId >= 0) {
