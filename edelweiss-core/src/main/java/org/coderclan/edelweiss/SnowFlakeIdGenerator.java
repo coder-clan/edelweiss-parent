@@ -64,7 +64,11 @@ public class SnowFlakeIdGenerator implements IdGenerator {
         if (machineId > Constants.maxMachineId) {
             throw new IllegalArgumentException("machineId must be within the range[0," + Constants.maxMachineId + "].");
         }
-        this.machineId = machineId;
+        if (this.machineId != machineId) {
+            log.info("Machine ID changed into {} from {}.", machineId, this.machineId);
+            this.machineId = machineId;
+        }
+        log.debug("machineIdExpiringTime: ", machineIdExpiringTime);
         this.machineData = machineId << Constants.machineIdShiftBits;
         this.machineIdExpiringTime = machineIdExpiringTime;
     }
@@ -82,9 +86,18 @@ public class SnowFlakeIdGenerator implements IdGenerator {
 
             // Wait until current currentTime is greater than or equal to this.lastTime
             // System Clock may be changed. e.g. NTP update the system clock backward.
+            //
+            // Accuracy of NTP depends on latency of network.
+            // Accuracy of NTP on Internet would be from 20ms to 500ms
+            // Accuracy of NTP on Intranet would be less than 1ms
+            // It's better to use local NTP Server.
             while (currentTime < lastUsedTime) {
                 log.warn("Time ran backward! currentTime={}, lastUsedTime={}", currentTime, lastUsedTime);
-                Thread.yield();
+                try {
+                    Thread.sleep(lastUsedTime - currentTime);
+                } catch (InterruptedException e) {
+                    Thread.interrupted();
+                }
                 currentTime = System.currentTimeMillis();
             }
 

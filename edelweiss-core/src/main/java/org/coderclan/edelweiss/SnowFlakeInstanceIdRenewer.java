@@ -17,8 +17,7 @@ public class SnowFlakeInstanceIdRenewer {
     private final String key = UUID.randomUUID().toString();
     private volatile int machineId = -1;
     private final int machineIdTtl;
-    private final ScheduledExecutorService executorService = Executors
-            .newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
 
     public SnowFlakeInstanceIdRenewer(SnowFlakeIdGenerator idGenerator, InstanceIdAssigner instanceIdAssigner, int machineIdTtl) {
