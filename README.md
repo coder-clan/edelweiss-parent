@@ -36,10 +36,11 @@ The module edelweiss-demo demonstrate how to use the Edelweiss.
 
 ## Limitation
 
-The Snowflake ID algorithm is highly depending on System Clock. The System Clock should be accurate enough. Using a time
-server to synchronize the System Clock is strong recommended.
+The Snowflake ID algorithm is highly depending on System Clock. The System Clock should be accurate enough. Using a
+time-server to synchronize the System Clock is strong recommended.
 
-Different System Clock between nodes may cause two or more nodes use the same Machine ID. we could prevent this by increasing
+Different System Clock between nodes may cause two or more nodes use the same Machine ID. we could prevent this by
+increasing
 the System Clock accuracy or Increasing the life of machine ID(increasing the value of <code>
 coderclan.edelweiss.machineIdTtl</code>). The max difference of System Clocks allowed by The Edelweiss is (<code>
 coderclan.edelweiss.machineIdTtl</code> * <code>Constants.DEFAULT_INSTANCE_ID_TTL_MARGIN_RATE</code> + 1), unit: second.

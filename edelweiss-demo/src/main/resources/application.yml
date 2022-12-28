@@ -1,6 +1,9 @@
 coderclan:
   edelweiss:
     # TTL of machineId of SnowFlake. Unit: Second. Default value: 600
+    #
+    # The following configured 10 seconds is for testing only, it should be large enough.
+    # The default value 600 seconds will allow 2 minutes of System Clock difference.
     machineIdTtl: 10
 
 spring:

@@ -10,6 +10,9 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.sql.DataSource;
 
+/**
+ * @author aray(dot)chou(dot)cn(at)gmail(dot)com
+ */
 @Configuration
 @AutoConfigureAfter(DataSourceAutoConfiguration.class)
 public class EdelweissConfiguration {
@@ -19,8 +22,7 @@ public class EdelweissConfiguration {
     @Bean
     @ConditionalOnMissingBean(IdGenerator.class)
     public SnowFlakeIdGenerator idGenerator() {
-        SnowFlakeIdGenerator instance = SnowFlakeIdGenerator.instance();
-        return instance;
+        return SnowFlakeIdGenerator.instance();
     }
 
     @Bean
@@ -35,9 +37,4 @@ public class EdelweissConfiguration {
     public SnowFlakeInstanceIdRenewer snowFlakeInstanceIdRenewer(SnowFlakeIdGenerator idGenerator, InstanceIdAssigner instanceIdAssigner) {
         return new SnowFlakeInstanceIdRenewer(idGenerator, instanceIdAssigner, machineIdTtl);
     }
-//    @Bean
-//    @ConditionalOnMissingBean
-//    public IdentifierGenerator identifierGenerator() {
-//        return new EdelweissIdentifierGenerator();
-//    }
 }

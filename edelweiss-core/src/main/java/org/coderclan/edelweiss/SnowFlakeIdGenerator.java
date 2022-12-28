@@ -18,25 +18,25 @@ import org.slf4j.LoggerFactory;
 public class SnowFlakeIdGenerator implements IdGenerator {
     private static final Logger log = LoggerFactory.getLogger(SnowFlakeIdGenerator.class);
     /**
-     * guard by this.
+     * Guard by "this".
      */
     private int machineId;
     /**
-     * guard by this.
+     * Guard by "this".
      * Equals to (this.machineId << machineIdShiftBits)
      */
     private int machineData;
 
     /**
-     * guard by this. Timestamp, unit: second, won't generate Id after this point of time.
+     * Guard by "this". Timestamp, unit: second, won't generate Id after this point of time.
      */
     private long machineIdExpiringTime;
     /**
-     * guard by this.
+     * Guard by "this".
      */
     private long lastUsedTime;
     /**
-     * guard by this.
+     * Guard by "this".
      * per-machine sequence value.
      */
     private int sequence = 0;
@@ -53,27 +53,27 @@ public class SnowFlakeIdGenerator implements IdGenerator {
         return INSTANCE;
     }
 
-    ;
-
     /**
      * Set machine ID. Set it to -1 will make {@link #generateId()} throws IllegalStateException.
      *
      * @param machineId machine ID should be unique at any time.
      */
     public synchronized void setMachineId(int machineId, long machineIdExpiringTime) {
-        if (machineId > Constants.maxMachineId) {
-            throw new IllegalArgumentException("machineId must be within the range[0," + Constants.maxMachineId + "].");
+        if (machineId > Constants.MAX_MACHINE_ID) {
+            throw new IllegalArgumentException("machineId must be within the range[0," + Constants.MAX_MACHINE_ID + "].");
         }
         if (this.machineId != machineId) {
             log.info("Machine ID changed into {} from {}.", machineId, this.machineId);
             this.machineId = machineId;
         }
-        log.debug("machineIdExpiringTime: ", machineIdExpiringTime);
-        this.machineData = machineId << Constants.machineIdShiftBits;
+        log.debug("machineIdExpiringTime extended to: {}", machineIdExpiringTime);
+        this.machineData = machineId << Constants.MACHINE_ID_SHIFT_BITS;
         this.machineIdExpiringTime = machineIdExpiringTime;
     }
 
     @Override
+    // Use Thread.sleep() instead of Object.wait(), because other threads can not execute too.
+    @SuppressWarnings("java:S2276")
     public long generateId() throws IllegalStateException {
         // this call is expensive, don't put it into the following synchronized block
         long currentTime = System.currentTimeMillis();
@@ -96,23 +96,23 @@ public class SnowFlakeIdGenerator implements IdGenerator {
                 try {
                     Thread.sleep(lastUsedTime - currentTime);
                 } catch (InterruptedException e) {
-                    Thread.interrupted();
+                    Thread.currentThread().interrupt();
                 }
                 currentTime = System.currentTimeMillis();
             }
 
             if (currentTime > lastUsedTime) {
-                // reset sequence;
+                // reset sequence
                 sequence = 0;
                 this.lastUsedTime = currentTime;
             }
 
             // if (currentTime - epoch > maxTimestamp) == true, the returning ID will be a negative number.
             // returning negative IDs is better than throwing an exception.
-            long id = ((currentTime - Constants.EPOCH) << Constants.timestampShiftBits) | machineData | (sequence++);
+            long id = ((currentTime - Constants.EPOCH) << Constants.TIMESTAMP_SHIFT_BITS) | machineData | (sequence++);
 
             // sequence exceeds max value
-            if (sequence > Constants.maxSequenceValue) {
+            if (sequence > Constants.MAX_SEQUENCE_VALUE) {
                 // increase this.lastTime to make the next ID can only be generated at (or after) the next millisecond.
                 lastUsedTime += 1L;
                 sequence = 0;

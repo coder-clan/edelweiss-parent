@@ -1,5 +1,8 @@
 package org.coderclan.edelweiss;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import java.sql.*;
@@ -11,6 +14,7 @@ import java.time.Instant;
  * @author aray(dot)chou(dot)cn(at)gmail(dot)com
  */
 public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
+    private static final Logger log = LoggerFactory.getLogger(JbdcInstanceIdAssigner.class);
 
     private final DataSource dataSource;
 
@@ -38,7 +42,7 @@ public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
 
             // insert initial data
             try (final PreparedStatement ps = connection.prepareStatement(insertDataSql);) {
-                for (int i = 0; i <= Constants.maxMachineId; i++) {
+                for (int i = 0; i <= Constants.MAX_MACHINE_ID; i++) {
                     ps.setInt(1, i);
                     ps.addBatch();
                 }
@@ -47,8 +51,8 @@ public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
             if (!connection.getAutoCommit()) {
                 connection.commit();
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            log.debug("", e);
         }
     }
 
@@ -64,16 +68,24 @@ public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
             try (ResultSet rs = statement.executeQuery();) {
                 if (rs.next()) {
                     rs.updateString("instance_key", key);
-                    rs.updateLong("expiring_time", expiringTime + ttlMargin);
+                    final long expiringTimeWithMargin = expiringTime + ttlMargin;
+                    rs.updateLong("expiring_time", expiringTimeWithMargin);
                     rs.updateRow();
-                    return rs.getInt("instance_id");
+                    if (!connection.getAutoCommit()) {
+                        connection.commit();
+                    }
+
+                    final int instanceId = rs.getInt("instance_id");
+                    log.info("Assigned a new snowflake instance ID. "
+                            + "Snowflake Instance ID: {}, Instance Key: {}, Expiring Time (with Margin): {}", instanceId, key, expiringTimeWithMargin);
+                    return instanceId;
+                } else {
+                    log.error("Snowflake Instance IDs exhausted!");
+                    return -1;
                 }
             }
-            if (!connection.getAutoCommit()) {
-                connection.commit();
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            log.error("Failed to assign snowflake instance ID!", e);
         }
         return -1;
     }
@@ -102,7 +114,8 @@ public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
              final PreparedStatement statement = connection.prepareStatement(sql);) {
             long currentTimeStampSeconds = getCurrentTimeStampSeconds();
             int ttlMargin = getTtlMargin(expiringTime, currentTimeStampSeconds);
-            statement.setLong(1, expiringTime + ttlMargin);
+            final long expiringTimeWithMargin = expiringTime + ttlMargin;
+            statement.setLong(1, expiringTimeWithMargin);
             statement.setLong(2, instanceId);
             statement.setString(3, key);
             statement.setLong(4, currentTimeStampSeconds);
@@ -111,12 +124,16 @@ public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
                 connection.commit();
             }
             if (rows == 1) {
+                log.debug("Renewed snowflake instance ID successfully. "
+                        + "Snowflake Instance ID: {}, Instance Key: {}, Expiring Time (with Margin): {}", instanceId, key, expiringTimeWithMargin);
                 return instanceId;
             } else {
+                log.info("Failed to renewed snowflake instance ID, trying to assign a new one."
+                        + "Snowflake Instance ID: {}, Instance Key: {}, Expiring Time (with Margin): {}", instanceId, key, expiringTimeWithMargin);
                 return this.assignAnInstanceId(key, expiringTime);
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            log.error("Failed to renewed snowflake instance ID!", e);
         }
         return -1;
     }
