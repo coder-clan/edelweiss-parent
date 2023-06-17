@@ -57,6 +57,7 @@ public class SnowFlakeIdGenerator implements IdGenerator {
      * Set machine ID. Set it to -1 will make {@link #generateId()} throws IllegalStateException.
      *
      * @param machineId machine ID should be unique at any time.
+     * @param machineIdExpiringTime machine ID will be expired after this time. unit: second.
      */
     public synchronized void setMachineId(int machineId, long machineIdExpiringTime) {
         if (machineId > Constants.MAX_MACHINE_ID) {
