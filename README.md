@@ -6,6 +6,10 @@ features:
 - Automatic assign instance id of Snowflake
 - Pause to generate ID if the system clock has been changed backward.
 
+## ChangeLog
+
+- 1.0.1 support spring boot 3.x
+
 ## Design
 
 The Edelweiss introduce an interface <code>org.coderclan.edelweiss.InstanceIdAssigner</code>. It calls <code>

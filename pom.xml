@@ -12,7 +12,7 @@
     </modules>
     <groupId>org.coderclan</groupId>
     <artifactId>edelweiss-parent</artifactId>
-    <version>1.0.0</version><!-- edelweiss version -->
+    <version>1.0.1</version><!-- edelweiss version -->
 
     <name>Edelweiss</name>
     <url>https://github.com/coder-clan/edelweiss-parent</url>
@@ -41,6 +41,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <jakarta-annotation.version>2.1.1</jakarta-annotation.version>
     </properties>
 
     <dependencyManagement>
@@ -66,6 +67,12 @@
                 <version>2.7.0</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.annotation</groupId>
+                <artifactId>jakarta.annotation-api</artifactId>
+                <version>${jakarta-annotation.version}</version>
+                <scope>provided</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>

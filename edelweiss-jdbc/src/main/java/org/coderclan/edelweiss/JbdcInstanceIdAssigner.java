@@ -23,6 +23,7 @@ public class JbdcInstanceIdAssigner implements InstanceIdAssigner {
     }
 
     @PostConstruct
+    @jakarta.annotation.PostConstruct
     public void init() {
         final String createTableSQl = "CREATE TABLE sys_edelweiss_instance (\n" +
                 "\tinstance_id INT NOT NULL,\n" +
